@@ -109,9 +109,11 @@ class ImageCmdInterface:
         i = 0
         while True:
             # relative file path
-            rel_filename = os.path.join("%s/%s%d.jpg" % (self.image_dir_name if self.image_dir_name else fn_without_ext, fn_without_ext, i))
+            dir_ = self.image_dir_name if self.image_dir_name else fn_without_ext + "/"
+            file_name = "{}-{}.jpg".format(fn_without_ext, i)
+            rel_filename = dir_ + file_name
             # absolute file path
-            path_abs = os.path.join(subdir_name, "%s%d.jpg" % (fn_without_ext, i))
+            path_abs = os.path.join(subdir_name, file_name)
             if not os.path.exists(path_abs):
                 break
             i += 1
@@ -139,12 +141,12 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
 
     def paste(self):
         path_save, rel_fn = self.get_filename()
+        print(">>{}<<<".format(path_save.encode()))
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
             if img:
-                path_save = sys.argv[1] if sys.argv[1] else "save.jpg"
                 save_clipboard_image(path_save, img)
-                print("[+] Save Image to 【{}】." % path_save)
+                print("[+] Save Image to 【{}】".format(path_save))
                 return rel_fn
         else:
             # img = grabclipboard_byQt(cb, "img")

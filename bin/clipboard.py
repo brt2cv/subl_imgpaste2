@@ -44,9 +44,8 @@ if __name__ == "__main__":
         # if path_save == "/home/brt/quit.jpg\n":
         #     break
         img = grabclipboard_byQt(cb)
-        # sys.stderr.write(">>>", img)
         if img:
-            save_clipboard_image(path_save, img)
+            save_clipboard_image(path_save.strip(), img)
             str_pipe = "ok"
         else:
             str_pipe = ""
