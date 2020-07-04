@@ -141,7 +141,6 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
 
     def paste(self):
         path_save, rel_fn = self.get_filename()
-        print(">>{}<<<".format(path_save.encode()))
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
             if img:
