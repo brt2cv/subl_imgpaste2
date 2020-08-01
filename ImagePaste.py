@@ -5,24 +5,69 @@ import os
 import sys
 import subprocess
 
-# from bin.Clipboard import save_clipboard_image
 
-
-if sys.platform == 'win32':
-    # 从集成的PIL中导入
-    package_file = os.path.normpath(os.path.abspath(__file__))
-    package_path = os.path.dirname(package_file)
-    lib_path =  os.path.join(package_path, "lib")
-    if lib_path not in sys.path:
-        sys.path.append(lib_path)
-    from PIL import ImageGrab, ImageFile
-    ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-else:
+def subproc_init():
     # 通过PyQt5调用剪切板
     dirname = os.path.dirname(__file__)
     command =['python3', os.path.join(dirname, 'bin/clipboard.py')]
-    str_cmd = " ".join(command)
+    # str_cmd = " ".join(command)
+    return subprocess.Popen(command,
+                            stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE)
+                            # stderr=subprocess.STDOUT)
+
+package_file = os.path.normpath(os.path.abspath(__file__))
+package_path = os.path.dirname(package_file)
+path_bin = os.path.join(package_path, "bin")
+path_lib = os.path.join(package_path, "lib")
+
+if path_bin not in sys.path:
+    sys.path.append(path_bin)
+from util import save_clipboard_image  # 调用本地模块
+
+if sys.platform == 'win32':
+    # 从集成的PIL中导入
+    if path_lib not in sys.path:
+        sys.path.append(path_lib)
+    from PIL import ImageGrab, ImageFile
+    ImageFile.LOAD_TRUNCATED_IMAGES = True
+else:
+    PROC = subproc_init()
+
+def subproc_stop():
+    if PROC.poll() is None:
+        PROC.kill()
+
+def subproc_restart():
+    global PROC
+
+    print("[warning] 重启clipboard.py")
+    subproc_stop()
+    PROC = subproc_init()
+
+def call_subproc(file_name):
+    if PROC.poll() is not None:
+        subproc_restart()
+
+    try:
+        str_path = file_name + "\n"
+        print("[debug] subprocess.PIPE.stdin: {}".format(str_path.encode()))
+        PROC.stdin.write(str_path.encode())  # need bytes
+        PROC.stdin.flush()
+
+        bytes_state = PROC.stdout.readline()  # bytes
+        print("[debug] subprocess.PIPE.stdout:", str(bytes_state))
+        return bytes_state == b"ok\n"
+
+    except subprocess.TimeoutExpired:
+        print("子程序Timout未响应...")
+        subproc_restart()
+
+
+# def plugin_loaded():
+#     """ 插件已载入 """
+# def plugin_unloaded():
+#     """ 卸载插件 """
 
 
 class ImageCmdInterface:
@@ -37,13 +82,13 @@ class ImageCmdInterface:
     def run_command(self, cmd):
         cwd = os.path.dirname(self.view.file_name())
         # print("[+] run cmd: %r" % cmd)
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=os.environ)
+        PROC = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd, env=os.environ)
 
         try:
-            outs, errs = proc.communicate(timeout=15)
+            outs, errs = PROC.communicate(timeout=15)
         except Exception:
-            proc.kill()
-            outs, errs = proc.communicate()
+            PROC.kill()
+            outs, errs = PROC.communicate()
         print("[debug] outs %r, errs %r" % (b'\n'.join(outs.split(b'\r\n')), errs))
         # if errs is None or len(errs) == 0:
         return outs.decode()
@@ -58,15 +103,17 @@ class ImageCmdInterface:
             subdir_name = os.path.join(os.path.split(dirname)[0], self.image_dir_name)
         else:
             subdir_name = dirname
-        if not os.path.lexists(subdir_name):
+        if not os.path.exists(subdir_name):
             os.mkdir(subdir_name)
 
         i = 0
         while True:
             # relative file path
-            rel_filename = os.path.join("%s/%s%d.png" % (self.image_dir_name if self.image_dir_name else fn_without_ext, fn_without_ext, i))
+            dir_ = self.image_dir_name if self.image_dir_name else fn_without_ext + "/"
+            file_name = "{}-{}.jpg".format(fn_without_ext, i)
+            rel_filename = dir_ + file_name
             # absolute file path
-            path_abs = os.path.join(subdir_name, "%s%d.png" % (fn_without_ext, i))
+            path_abs = os.path.join(subdir_name, file_name)
             if not os.path.exists(path_abs):
                 break
             i += 1
@@ -93,16 +140,16 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
             break
 
     def paste(self):
-        path_abs, rel_fn = self.get_filename()
+        path_save, rel_fn = self.get_filename()
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
-            if im:
-                im.save(path_abs, 'JPEG')
+            if img:
+                save_clipboard_image(path_save, img)
+                print("[+] Save Image to 【{}】".format(path_save))
                 return rel_fn
         else:
-            str_cmd_curr = str_cmd + " " + path_abs
-            out = self.run_command(str_cmd_curr)
-            if out and out[:4] == "done":
+            # img = grabclipboard_byQt(cb, "img")
+            if call_subproc(path_save):
                 return rel_fn
 
         print('[-] Clipboard buffer is not IMAGE!')
