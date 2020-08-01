@@ -51,13 +51,13 @@ def call_subproc(file_name):
 
     try:
         str_path = file_name + "\n"
-        print("[debug] subprocess.PIPE.stdin: {}".format(str_path.encode()))
+        # print("[debug] subprocess.PIPE.stdin: {}".format(str_path.encode()))
         PROC.stdin.write(str_path.encode())  # need bytes
         PROC.stdin.flush()
 
         bytes_state = PROC.stdout.readline()  # bytes
-        print("[debug] subprocess.PIPE.stdout:", str(bytes_state))
-        return bytes_state == b"ok\n"
+        # print("[debug] subprocess.PIPE.stdout:", str(bytes_state))
+        return bytes_state  # == b"img\n"
 
     except subprocess.TimeoutExpired:
         print("子程序Timout未响应...")
@@ -149,8 +149,12 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 return rel_fn
         else:
             # img = grabclipboard_byQt(cb, "img")
-            if call_subproc(path_save):
+            bytes_ret = call_subproc(path_save)
+            if bytes_ret == b"img\n":
                 return rel_fn
+            elif bytes_ret != b"err\n":
+                return bytes_ret.decode().strip()
+            # elif bytes_ret == b"err\n":
 
         print('[-] Clipboard buffer is not IMAGE!')
-        return None
+        return
