@@ -8,9 +8,12 @@ from PyQt5.QtGui import QGuiApplication
 
 from util import save_clipboard_image
 
+def grabclip_text(cb):
+    if cb.mimeData().hasText():
+        return cb.text()
 
-def grabclipboard_byQt(cb):
-    # if type_ == "img" and cb.mimeData().hasImage():
+def grabclip_img(cb):
+    """ return a PIL_Image or None """
     if cb.mimeData().hasImage():
         # print("[+] Get image from the Clipboard.")
         qt_img = cb.image()
@@ -19,6 +22,8 @@ def grabclipboard_byQt(cb):
     #     ret = cb.text()
     # else:
     #     raise Exception("未知的type_格式：「{}」" % type_)
+
+grabclipboard_byQt = grabclip_img
 
 
 if __name__ == "__main__":
@@ -43,12 +48,16 @@ if __name__ == "__main__":
         # sys.stderr.write(path_save)
         # if path_save == "/home/brt/quit.jpg\n":
         #     break
+        str_pip = "err"
         img = grabclipboard_byQt(cb)
         if img:
             save_clipboard_image(path_save.strip(), img)
-            str_pipe = "ok"
+            str_pipe = "img"
         else:
-            str_pipe = ""
+            text = grabclip_text(cb)
+            # 验证是否为图像链接
+            if text.startswith("http"):  # ?? 这里验证并不完整...
+                str_pipe = text
 
         # sys.stdout.write(str_pipe + "\n")  # 必须添加换行符
         print(str_pipe)
