@@ -21,11 +21,10 @@ git clone https://gitee.com/brt2/subl_imgpaste2.git
 
 Linux
 
+* Pillow（已集成）
+* PyQt5 - 需要系统Python3环境中安装
+
+Windows（均已集成）
+
 * Pillow
-* PyQt5
-
-Windows
-
-* Pillow
-
-当然，你如果不想污染你的python系统环境，可以将下载的依赖包直接剪切到 `subl_imgpaste2/lib` 目录下。`imagepaste` 项目就是这样集成PIL的。
+* pyperclip

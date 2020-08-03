@@ -30,6 +30,8 @@ if sys.platform == 'win32':
     if path_lib not in sys.path:
         sys.path.append(path_lib)
     from PIL import ImageGrab, ImageFile
+    import pyperclip
+
     ImageFile.LOAD_TRUNCATED_IMAGES = True
 else:
     PROC = subproc_init()
@@ -147,13 +149,16 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 save_clipboard_image(path_save, img)
                 print("[+] Save Image to 【{}】".format(path_save))
                 return rel_fn
-
-        # for Linux
-        bytes_ret = call_subproc(path_save)
-        if bytes_ret == b"img\n":
-            return rel_fn
-        elif bytes_ret != b"err\n":
-            return bytes_ret.decode().strip()
+            else:
+                text = pyperclip.paste()
+                if text.startswith("http"):
+                    return text
+        else:  # for Linux
+            bytes_ret = call_subproc(path_save)
+            if bytes_ret == b"img\n":
+                return rel_fn
+            elif bytes_ret != b"err\n":
+                return bytes_ret.decode().strip()
 
         print('[-] Clipboard buffer is not IMAGE!')
         return
