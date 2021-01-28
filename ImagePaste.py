@@ -146,7 +146,7 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
             if img:
-                save_clipboard_image(path_save, img)
+                save_clipboard_image(path_save, img.crop([0, 1].extend(img.size)))  # 因黑边问题，裁剪掉首行像素
                 print("[+] Save Image to 【{}】".format(path_save))
                 return rel_fn
             else:
