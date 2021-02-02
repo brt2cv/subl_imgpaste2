@@ -23,6 +23,7 @@ Linux
 
 * Pillow（已集成）
 * PyQt5 - 需要系统Python3环境中安装
+* 系统剪切板工具 `xclip`
 
 Windows（均已集成）
 
