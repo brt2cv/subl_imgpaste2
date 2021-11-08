@@ -21,14 +21,14 @@ package_path = os.path.dirname(package_file)
 path_bin = os.path.join(package_path, "bin")
 path_lib = os.path.join(package_path, "lib")
 
+if path_lib not in sys.path:
+    sys.path.append(path_lib)
 if path_bin not in sys.path:
     sys.path.append(path_bin)
 from util import save_clipboard_image  # 调用本地模块
 
 if sys.platform == 'win32':
     # 从集成的PIL中导入
-    if path_lib not in sys.path:
-        sys.path.append(path_lib)
     from PIL import ImageGrab, ImageFile
     import pyperclip
 
