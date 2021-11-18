@@ -5,6 +5,10 @@ import os
 import sys
 import subprocess
 
+from base64 import b64encode
+from io import BytesIO
+from hashlib import md5
+from datetime import datetime
 
 def subproc_init():
     # 通过PyQt5调用剪切板
@@ -25,7 +29,7 @@ if path_lib not in sys.path:
     sys.path.append(path_lib)
 if path_bin not in sys.path:
     sys.path.append(path_bin)
-from util import save_clipboard_image  # 调用本地模块
+from util import format_clipboard_image  # 调用本地模块
 
 if sys.platform == 'win32':
     # 从集成的PIL中导入
@@ -79,7 +83,7 @@ class ImageCmdInterface:
 
         # get the image save dirname
         self.image_dir_name = self.settings.get('image_dir_name', "")
-        print("Init ImageCommand -> image_dir=%r" % self.image_dir_name)
+        # print("Init ImageCommand -> image_dir=%r" % self.image_dir_name)
 
     def run_command(self, cmd):
         cwd = os.path.dirname(self.view.file_name())
@@ -126,31 +130,45 @@ class ImageCmdInterface:
 
 class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
     def run(self, edit):
-        rel_fn = self.paste()
+        img_str = self.paste_image()
 
-        if not rel_fn:
+        if not img_str:
             self.view.run_command("paste")
             return
 
         for pos in self.view.sel():
-            print("scope name: %r" % (self.view.scope_name(pos.begin())))
+            # print("scope name: %r" % (self.view.scope_name(pos.begin())))
             if 'text.html.markdown' in self.view.scope_name(pos.begin()):
-                self.view.insert(edit, pos.begin(), "![](%s)" % rel_fn)
+                if isinstance(img_str, str):
+                # if img_str.startswith("http"):
+                    self.view.insert(edit, pos.begin(), "![](%s)" % img_str)
+                else:
+                    md5obj = md5(datetime.now())
+                    md5obj.update(img_str)
+                    tmp_label = md5obj.hexdigest()
+
+                    self.view.insert(edit, pos.begin(), "![](%s)" % tmp_label)
+                    self.view.insert(edit, pos.end(), "\n\n[%s](%s)" % (tmp_label, img_str.decode()))
             else:
-                self.view.insert(edit, pos.begin(), "%s" % rel_fn)
+                self.view.insert(edit, pos.begin(), "%s" % img_str)
             # only the first cursor add the path
             break
 
-    def paste(self):
-        path_save, rel_fn = self.get_filename()
+    def paste_image(self):
+        # path_save, rel_fn = self.get_filename()
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
             if img:
                 _resize = [0, 1]
                 _resize.extend(img.size)
-                save_clipboard_image(path_save, img.crop(_resize))  # 因黑边问题，裁剪掉首行像素
-                print("[+] Save Image to 【{}】".format(path_save))
-                return rel_fn
+                img = format_clipboard_image(img.crop(_resize))  # 因黑边问题，裁剪掉首行像素
+                # if save_clipboard_image:
+                #     img.save(path, type_)
+                # convert image to base64
+                buff = BytesIO()
+                img.save(buff, format='JPEG')
+                img_base64 = b64encode(buff.getvalue())  # bytes
+                return img_base64
             else:
                 text = pyperclip.paste()
                 if text.startswith("http"):

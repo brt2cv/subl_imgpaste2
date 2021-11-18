@@ -77,12 +77,12 @@ def resize(im, **kwargs):
 # end of imgfmt
 #####################################################################
 
-def save_clipboard_image(path, img, type_="JPEG"):
+def format_clipboard_image(img, type_="JPEG"):
+    """ return a formated image """
     if type_ == "JPEG" and img.mode != "RGB":
         img = img.convert("RGB")
 
     if not size_resolution(img, SIZE_LARGE_THRESHOLD):
         img = resize(img, ratio=0.8, max_shape=SIZE_LARGE_THRESHOLD)
         # print(f"已缩放【{path_img}】")
-
-    img.save(path, type_)
+    return img

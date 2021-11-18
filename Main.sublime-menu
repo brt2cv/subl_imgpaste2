@@ -1,11 +1,9 @@
 [
     {
-        "mnemonic": "n",
         "caption": "Preferences",
         "id": "preferences",
         "children": [
             {
-                "mnemonic": "P",
                 "caption": "Package Settings",
                 "id": "package-settings",
                 "children": [
@@ -14,17 +12,17 @@
                         "children": [
                             {
                                 "caption": "Settings – Default",
+                                "command": "open_file",
                                 "args": {
                                     "file": "${packages}/subl_imgpaste2/imgpaste2.sublime-settings"
-                                },
-                                "command": "open_file"
+                                }
                             },
                             {
                                 "caption": "Settings – User",
+                                "command": "open_file",
                                 "args": {
                                     "file": "${packages}/User/imgpaste2.sublime-settings"
-                                },
-                                "command": "open_file"
+                                }
                             }
                         ]
                     }
