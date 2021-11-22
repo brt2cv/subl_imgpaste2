@@ -143,12 +143,13 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 # if img_str.startswith("http"):
                     self.view.insert(edit, pos.begin(), "![](%s)" % img_str)
                 else:
-                    md5obj = md5(datetime.now())
+                    salt = str(datetime.now()).encode()
+                    md5obj = md5(salt)
                     md5obj.update(img_str)
                     tmp_label = md5obj.hexdigest()
 
-                    self.view.insert(edit, pos.begin(), "![](%s)" % tmp_label)
-                    self.view.insert(edit, pos.end(), "\n\n[%s](%s)" % (tmp_label, img_str.decode()))
+                    self.view.insert(edit, pos.begin(), "![][%s]" % tmp_label)
+                    self.view.insert(edit, pos.end(), "\n\n[%s]:data:image/png;base64,%s" % (tmp_label, img_base64.decode()))
             else:
                 self.view.insert(edit, pos.begin(), "%s" % img_str)
             # only the first cursor add the path
