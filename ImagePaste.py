@@ -149,7 +149,8 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                     tmp_label = md5obj.hexdigest()
 
                     self.view.insert(edit, pos.begin(), "![][%s]" % tmp_label)
-                    self.view.insert(edit, self.view.size(), "\n\n[%s]:data:image/png;base64,%s" % (tmp_label, img_str.decode()))
+                    # self.view.insert(edit, self.view.size(), "\n\n[%s]:data:image/png;base64,%s" % (tmp_label, img_str.decode()))
+                    self.view.insert(edit, pos.begin(), "[%s]:data:image/png;base64,%s\n" % (tmp_label, img_str.decode()))
             else:
                 self.view.insert(edit, pos.begin(), "%s" % img_str)
             # only the first cursor add the path
