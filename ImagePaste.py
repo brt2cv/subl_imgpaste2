@@ -17,8 +17,8 @@ def subproc_init():
     # str_cmd = " ".join(command)
     return subprocess.Popen(command,
                             stdin=subprocess.PIPE,
+                            # stderr=subprocess.STDOUT,
                             stdout=subprocess.PIPE)
-                            # stderr=subprocess.STDOUT)
 
 package_file = os.path.normpath(os.path.abspath(__file__))
 package_path = os.path.dirname(package_file)
@@ -79,7 +79,7 @@ def call_subproc(file_name):
 class ImageCmdInterface:
     def __init__(self, *args, **kwgs):
         super().__init__(*args, **kwgs)
-        self.settings = sublime.load_settings('imgpaste2.sublime-settings')
+        self.settings = sublime.load_settings('settings.sublime-settings')
 
         # get the image save dirname
         self.image_dir_name = self.settings.get('image_dir_name', "")
@@ -139,8 +139,8 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
         for pos in self.view.sel():
             # print("scope name: %r" % (self.view.scope_name(pos.begin())))
             if 'text.html.markdown' in self.view.scope_name(pos.begin()):
-                if isinstance(img_str, str):
                 # if img_str.startswith("http"):
+                if isinstance(img_str, str):
                     self.view.insert(edit, pos.begin(), "![](%s)" % img_str)
                 else:
                     salt = str(datetime.now()).encode()
@@ -157,7 +157,6 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
             break
 
     def paste_image(self):
-        # path_save, rel_fn = self.get_filename()
         if sys.platform == 'win32':
             img = ImageGrab.grabclipboard()
             if img:
@@ -176,6 +175,7 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 if text.startswith("http"):
                     return text
         else:  # for Linux
+            path_save, rel_fn = self.get_filename()
             bytes_ret = call_subproc(path_save)
             if bytes_ret == b"img\n":
                 return rel_fn
