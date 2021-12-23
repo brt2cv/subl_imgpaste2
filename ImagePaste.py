@@ -1,3 +1,8 @@
+#!/usr/bin/env python3
+# @Date    : 2021-12-23
+# @Author  : Bright (brt2@qq.com)
+# @Link    : https://gitee.com/brt2
+
 import sublime
 import sublime_plugin
 
@@ -75,6 +80,18 @@ def call_subproc(file_name):
 # def plugin_unloaded():
 #     """ 卸载插件 """
 
+def md5sum(data, salt=None):
+    if salt is None:
+        salt = str(datetime.now()).encode()
+
+    md5obj = md5(salt)
+    md5obj.update(data)
+    return md5obj.hexdigest()
+
+def pilimg2bytes(img, format="JPEG"):
+    _buff = BytesIO()
+    img.save(_buff, format=format)
+    return _buff.getvalue()  # data: bytes
 
 class ImageCmdInterface:
     def __init__(self, *args, **kwgs):
@@ -143,11 +160,7 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 if isinstance(img_str, str):
                     self.view.insert(edit, pos.begin(), "![](%s)" % img_str)
                 else:
-                    salt = str(datetime.now()).encode()
-                    md5obj = md5(salt)
-                    md5obj.update(img_str)
-                    tmp_label = md5obj.hexdigest()
-
+                    tmp_label = md5sum(img_str[:70])
                     self.view.insert(edit, pos.begin(), "![][%s]" % tmp_label)
                     # self.view.insert(edit, self.view.size(), "\n\n[%s]:data:image/png;base64,%s" % (tmp_label, img_str.decode()))
                     self.view.insert(edit, pos.begin(), "[%s]:data:image/png;base64,%s\n" % (tmp_label, img_str.decode()))
@@ -163,12 +176,8 @@ class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
                 _resize = [0, 1]
                 _resize.extend(img.size)
                 img = format_clipboard_image(img.crop(_resize))  # 因黑边问题，裁剪掉首行像素
-                # if save_clipboard_image:
-                #     img.save(path, type_)
                 # convert image to base64
-                buff = BytesIO()
-                img.save(buff, format='JPEG')
-                img_base64 = b64encode(buff.getvalue())  # bytes
+                img_base64 = b64encode(pilimg2bytes(img, format="JPEG"))  # bytes
                 return img_base64
             else:
                 text = pyperclip.paste()
