@@ -146,6 +146,9 @@ class ImageCmdInterface:
 
 
 class ImagePasteCommand(ImageCmdInterface, sublime_plugin.TextCommand):
+    def is_checked(self):
+        return True
+
     def run(self, edit):
         img_str = self.paste_image()
 

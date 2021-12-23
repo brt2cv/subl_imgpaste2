@@ -1,0 +1,16 @@
+[
+    {
+        "caption": "MdTools",
+        "id": "L",
+        "children": [
+            {
+                "caption": "ImagePaste: 设置图片格式",
+                "id": "L",
+                "children": [
+                    {"caption": "同级子目录/img.jpg"},
+                    {"caption": "文档内嵌Base64图像", "checkbox": true, "command": "image_paste"}
+                ]
+            }
+        ]
+    }
+]
